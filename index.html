@@ -1,1000 +1,317 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="referrer" content="no-referrer-when-downgrade">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEET 2026 Study Dashboard</title>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- FullCalendar -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-    
-    <!-- Google API -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js"></script>
-    
-    <!-- Confetti -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/index.min.js"></script>
-
-    <style>
-        :root {
-            --physics: #4285f4;
-            --chemistry: #ff6d01;
-            --biology: #34a853;
-            --gym: #a142f4;
-            --revision: #fbbc04;
-            --bg: #fafafa;
-            --card: #ffffff;
-            --text: #202124;
-            --text-secondary: #5f6368;
-            --border: #e0e0e0;
-            --shadow: 0 2px 8px rgba(0,0,0,0.1);
-            --shadow-hover: 0 4px 16px rgba(0,0,0,0.15);
-            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            min-height: 100vh;
-            gap: 24px;
-            padding: 24px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .panel {
-            background: var(--card);
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            padding: 24px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .panel:hover {
-            box-shadow: var(--shadow-hover);
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .panel-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        /* Left Panel Styles */
-        .date-display {
-            font-size: 18px;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-        }
-
-        .streak-counter {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .streak-icon {
-            font-size: 32px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .streak-text {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .streak-glow {
-            animation: glow 0.5s ease-in-out;
-        }
-
-        @keyframes glow {
-            0% { box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
-            50% { box-shadow: 0 4px 32px rgba(102, 126, 234, 0.8); }
-            100% { box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
-        }
-
-        .checklist {
-            margin-bottom: 24px;
-        }
-
-        .checklist-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px;
-            margin-bottom: 8px;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            background: #fafafa;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        .checklist-item:active {
-            transform: scale(0.98);
-        }
-
-        .checklist-item:hover {
-            background: #f5f5f5;
-            transform: translateX(4px);
-        }
-
-        .checklist-item.completed {
-            background: #e8f5e8;
-        }
-
-        .subject-tag {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            color: white;
-            min-width: 80px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .subject-physics { background: var(--physics); }
-        .subject-chemistry { background: var(--chemistry); }
-        .subject-biology { background: var(--biology); }
-        .subject-gym { background: var(--gym); }
-        .subject-revision { background: var(--revision); }
-
-        .checkbox {
-            width: 28px;
-            height: 28px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .checkbox.checked {
-            background: var(--gradient);
-            border-color: transparent;
-            animation: checkBounce 0.4s ease;
-        }
-
-        @keyframes checkBounce {
-            0% { transform: scale(0.8); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        .checkbox.checked::after {
-            content: '✓';
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            animation: checkmark 0.3s ease;
-        }
-
-        @keyframes checkmark {
-            0% { opacity: 0; transform: scale(0); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        .task-text {
-            flex: 1;
-            font-size: 15px;
-            color: var(--text);
-            line-height: 1.4;
-        }
-
-        .task-text.completed {
-            text-decoration: line-through;
-            color: var(--text-secondary);
-        }
-
-        .progress-container {
-            margin-top: 24px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 12px;
-            background: #e0e0e0;
-            border-radius: 6px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--gradient);
-            border-radius: 6px;
-            transition: width 0.5s ease;
-            position: relative;
-        }
-
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .progress-text {
-            text-align: center;
-            margin-top: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        /* Right Panel Styles */
-        .calendar-container {
-            margin-bottom: 24px;
-            overflow-x: auto;
-        }
-
-        #calendar {
-            min-width: 100%;
-            height: 350px;
-        }
-
-        .reflection-form {
-            margin-top: 24px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--text);
-            font-size: 14px;
-        }
-
-        .form-textarea {
-            width: 100%;
-            min-height: 60px;
-            padding: 16px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 15px;
-            resize: vertical;
-            transition: all 0.3s ease;
-            background: #fafafa;
-            line-height: 1.5;
-            -webkit-appearance: none;
-        }
-
-        .form-textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-textarea.auto-expand {
-            transition: height 0.2s ease;
-        }
-
-        .save-button {
-            width: 100%;
-            padding: 16px 24px;
-            background: var(--gradient);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            -webkit-appearance: none;
-        }
-
-        .save-button:active {
-            transform: scale(0.98);
-        }
-
-        .save-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .save-button::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .save-button.ripple::after {
-            width: 300px;
-            height: 300px;
-        }
-
-        .google-signin {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .google-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 24px;
-            background: white;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            -webkit-appearance: none;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .google-button:active {
-            transform: scale(0.98);
-        }
-
-        .google-button:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            border-color: #d2e3fc;
-            background: #f8faff;
-        }
-
-        .google-button img {
-            width: 18px;
-            height: 18px;
-        }
-
-        .timestamp {
-            text-align: center;
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-top: 8px;
-        }
-
-        /* Mobile Responsive */
-        .mobile-toggle {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-secondary);
-            transition: transform 0.3s ease;
-            padding: 8px;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .mobile-toggle.rotated {
-            transform: rotate(180deg);
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-                padding: 12px;
-                gap: 16px;
-            }
-
-            .panel {
-                padding: 20px;
-                border-radius: 12px;
-            }
-
-            .panel-title {
-                font-size: 20px;
-            }
-
-            .mobile-toggle {
-                display: block;
-            }
-
-            .panel-content {
-                max-height: 2000px;
-                overflow: hidden;
-                transition: max-height 0.4s ease;
-            }
-
-            .panel-content.collapsed {
-                max-height: 0;
-            }
-
-            #calendar {
-                height: 320px;
-                min-width: 300px;
-            }
-
-            .checklist-item {
-                padding: 14px;
-                margin-bottom: 6px;
-            }
-
-            .task-text {
-                font-size: 14px;
-            }
-
-            .streak-counter {
-                padding: 14px;
-            }
-
-            .streak-text {
-                font-size: 18px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 8px;
-                gap: 12px;
-            }
-
-            .panel {
-                padding: 16px;
-            }
-
-            #calendar {
-                height: 280px;
-            }
-        }
-
-        /* Confetti styles */
-        .confetti {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1000;
-        }
-
-        /* Touch improvements */
-        * {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        input, textarea {
-            -webkit-user-select: text;
-            user-select: text;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NEET 2026 Study Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FullCalendar -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Google API (for Calendar) -->
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+  <!-- Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/index.min.js"></script>
+
+  <style>
+  :root{
+    --physics:#4285f4; --chemistry:#ff6d01; --biology:#34a853;
+    --gym:#a142f4; --revision:#fbbc04; --bg:#fafafa; --card:#fff;
+    --text:#202124; --text-secondary:#5f6368; --border:#e0e0e0;
+    --gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+  body{background:var(--bg);color:var(--text)}
+  .container{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px;max-width:1400px;margin:0 auto}
+  .panel{background:var(--card);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:24px}
+  @media(max-width:768px){.container{grid-template-columns:1fr;padding:12px}}
+  .panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px}
+  .panel-title{font-size:24px;font-weight:600}
+  .date-display{font-size:18px;color:var(--text-secondary);margin-bottom:12px}
+  .streak-counter{display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:var(--gradient);color:#fff;font-weight:600}
+  .streak-icon{font-size:28px;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+  .checklist-item{display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:8px;border-radius:12px;background:#fafafa;cursor:pointer}
+  .checklist-item.completed{background:#e8f5e8}
+  .subject-tag{padding:4px 12px;border-radius:20px;font-size:12px;color:#fff;min-width:80px;text-align:center}
+  .checkbox{width:28px;height:28px;border:2px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .checkbox.checked{background:var(--gradient);border-color:transparent}
+  .checkbox.checked:after{content:'✓';color:#fff;font-weight:700}
+  .task-text{flex:1;font-size:15px}
+  .task-text.completed{text-decoration:line-through;color:var(--text-secondary)}
+  .progress-container{margin-top:24px}
+  .progress-bar{height:12px;background:#e0e0e0;border-radius:6px;overflow:hidden}
+  .progress-fill{height:100%;background:var(--gradient);transition:width .5s}
+  .progress-text{text-align:center;margin-top:8px;font-weight:600;color:var(--text-secondary)}
+
+  /* Pomodoro */
+  .pomodoro{margin-top:24px;text-align:center}
+  .pomodoro-display{font-size:32px;font-weight:700;font-family:monospace;margin-bottom:8px}
+  .pomodoro-controls{display:flex;gap:8px;justify-content:center}
+  .pomodoro-btn{padding:8px 16px;border:none;border-radius:8px;background:var(--gradient);color:#fff;cursor:pointer;font-size:14px}
+  .pomodoro-btn:active{transform:scale(.95)}
+  .pomodoro-mode{font-size:14px;color:var(--text-secondary)}
+
+  .google-signin{margin-bottom:20px;text-align:center}
+  .form-textarea{width:100%;min-height:60px;padding:12px;border:1px solid var(--border);border-radius:8px;resize:vertical;font-size:14px;background:#fafafa}
+  .save-button{width:100%;padding:14px;border:none;border-radius:8px;background:var(--gradient);color:#fff;font-size:16px;font-weight:600;cursor:pointer}
+  </style>
 </head>
-<body>
-    <div class="container">
-        <!-- Left Panel -->
-        <div class="panel">
-            <div class="panel-header">
-                <h2 class="panel-title">Today's Study Plan</h2>
-                <button class="mobile-toggle" onclick="togglePanel('left')">▼</button>
-            </div>
-            <div class="panel-content" id="left-panel-content">
-                <div class="date-display" id="today-date"></div>
-                <div class="streak-counter" id="streak-counter">
-                    <span class="streak-icon">🔥</span>
-                    <span class="streak-text"><span id="streak-number">0</span> day streak!</span>
-                </div>
-                
-                <div class="checklist" id="checklist">
-                    <!-- Checklist items will be populated by JavaScript -->
-                </div>
-                
-                <div class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-                    </div>
-                    <div class="progress-text" id="progress-text">0% completed</div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Right Panel -->
-        <div class="panel">
-            <div class="panel-header">
-                <h2 class="panel-title">Calendar & Reflection</h2>
-                <button class="mobile-toggle" onclick="togglePanel('right')">▼</button>
-            </div>
-            <div class="panel-content" id="right-panel-content">
-                <div class="google-signin">
-                    <button class="google-button" onclick="handleAuthClick()" id="google-signin-button">
-                        <img src="https://www.gstatic.com/images/branding/googlelogo/svg/googlelogo_clr_74x24px.svg" alt="Google">
-                        Sign in with Google
-                    </button>
-                    <button class="google-button" onclick="handleSignoutClick()" id="google-signout-button" style="display: none;">
-                        Sign out
-                    </button>
-                </div>
-                
-                <div class="calendar-container">
-                    <div id="calendar"></div>
-                </div>
-                
-                <div class="reflection-form">
-                    <h3 style="margin-bottom: 16px;">Daily Reflection</h3>
-                    <div class="form-group">
-                        <label class="form-label">What I will do today</label>
-                        <textarea class="form-textarea auto-expand" id="today-plan" placeholder="Write your plans..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">What I did today</label>
-                        <textarea class="form-textarea auto-expand" id="today-done" placeholder="Document your actions..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Achievements today</label>
-                        <textarea class="form-textarea auto-expand" id="achievements" placeholder="Celebrate your wins..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Regrets today</label>
-                        <textarea class="form-textarea auto-expand" id="regrets" placeholder="Reflect on missed opportunities..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Mistakes I will not make again</label>
-                        <textarea class="form-textarea auto-expand" id="mistakes" placeholder="Learn and improve..."></textarea>
-                    </div>
-                    <button class="save-button" onclick="saveReflection()">Save Reflection</button>
-                    <div class="timestamp" id="last-saved">Not saved yet</div>
-                </div>
-            </div>
-        </div>
+<body>
+<div class="container">
+
+  <!-- LEFT PANEL -->
+  <div class="panel">
+    <div class="panel-header"><h2 class="panel-title">Today's Study Plan</h2></div>
+    <div class="date-display" id="today-date"></div>
+    <div class="streak-counter">
+      <span class="streak-icon">🔥</span>
+      <span><span id="streak-number">0</span> day streak!</span>
     </div>
 
-    <script>
-        // Configuration - Updated with your credentials
-        const API_KEY = 'AIzaSyBY7RyrrWyDihjC0FLWJeEqo8nLiMEa8zo';
-        const CLIENT_ID = '1010185464516-utcu4mcaq0gsc7alh0drqikreq9lre74.apps.googleusercontent.com';
+    <div id="checklist" class="checklist"></div>
 
-        // Global variables
-        let checklistData = [];
-        let calendar;
-        let isSignedIn = false;
-        let selectedDate = new Date().toISOString().split('T')[0];
+    <div class="progress-container">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-text" id="progress-text">0% completed</div>
+    </div>
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
+    <!-- Pomodoro Timer -->
+    <div class="pomodoro">
+      <div class="pomodoro-display" id="timer">25:00</div>
+      <div class="pomodoro-controls">
+        <button class="pomodoro-btn" onclick="pomodoroStart()">▶ Start</button>
+        <button class="pomodoro-btn" onclick="pomodoroPause()">⏸ Pause</button>
+        <button class="pomodoro-btn" onclick="pomodoroReset()">⏹ Reset</button>
+      </div>
+      <div class="pomodoro-mode" id="mode">Work</div>
+    </div>
+  </div>
 
-        function initializeApp() {
-            loadChecklist();
-            updateDate();
-            initializeCalendar();
-            setupAutoExpand();
-            loadReflection(selectedDate);
-            loadStreak();
-            
-            // Prevent zoom on double tap
-            let lastTouchEnd = 0;
-            document.addEventListener('touchend', function (event) {
-                let now = (new Date()).getTime();
-                if (now - lastTouchEnd <= 300) {
-                    event.preventDefault();
-                }
-                lastTouchEnd = now;
-            }, false);
-        }
+  <!-- RIGHT PANEL -->
+  <div class="panel">
+    <div class="panel-header"><h2 class="panel-title">Calendar & Reflection</h2></div>
 
-        // Checklist functionality
-        const defaultTasks = [
-            { text: "Physics - Mechanics Practice", subject: "physics", completed: false },
-            { text: "Chemistry - Organic Reactions", subject: "chemistry", completed: false },
-            { text: "Biology - Human Physiology", subject: "biology", completed: false },
-            { text: "Gym - 30 min workout", subject: "gym", completed: false },
-            { text: "Revision - Flashcards review", subject: "revision", completed: false }
-        ];
+    <!-- Google One-Tap Sign-In -->
+    <div class="google-signin">
+      <div id="g_id_onload"
+           data-client_id="1010185464516-utcu4mcaq0gsc7alh0drqikreq9lre74.apps.googleusercontent.com"
+           data-callback="handleCredentialResponse"
+           data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin"
+           data-type="standard"
+           data-size="large"
+           data-theme="outline"
+           data-text="sign_in_with"
+           data-shape="rectangular">
+      </div>
+    </div>
 
-        function loadChecklist() {
-            const saved = localStorage.getItem('checklist');
-            checklistData = saved ? JSON.parse(saved) : [...defaultTasks];
-            renderChecklist();
-            updateProgress();
-        }
+    <div id="calendar" style="height:350px;margin-bottom:20px"></div>
 
-        function renderChecklist() {
-            const container = document.getElementById('checklist');
-            container.innerHTML = '';
-            
-            checklistData.forEach((task, index) => {
-                const item = document.createElement('div');
-                item.className = `checklist-item ${task.completed ? 'completed' : ''}`;
-                item.innerHTML = `
-                    <div class="checkbox ${task.completed ? 'checked' : ''}" onclick="toggleTask(${index})"></div>
-                    <span class="subject-tag subject-${task.subject}">${task.subject}</span>
-                    <span class="task-text ${task.completed ? 'completed' : ''}">${task.text}</span>
-                `;
-                container.appendChild(item);
-            });
-        }
+    <div class="reflection-form">
+      <h3>Daily Reflection</h3>
+      <label>What I will do today</label>
+      <textarea class="form-textarea" id="today-plan"></textarea>
+      <label>What I did today</label>
+      <textarea class="form-textarea" id="today-done"></textarea>
+      <label>Achievements today</label>
+      <textarea class="form-textarea" id="achievements"></textarea>
+      <label>Regrets today</label>
+      <textarea class="form-textarea" id="regrets"></textarea>
+      <label>Mistakes I will not make again</label>
+      <textarea class="form-textarea" id="mistakes"></textarea>
+      <button class="save-button" onclick="saveReflection()">Save Reflection</button>
+      <div class="timestamp" id="last-saved">Not saved yet</div>
+    </div>
+  </div>
+</div>
 
-        function toggleTask(index) {
-            checklistData[index].completed = !checklistData[index].completed;
-            saveChecklist();
-            renderChecklist();
-            updateProgress();
-            
-            if (checklistData.every(task => task.completed)) {
-                if (!localStorage.getItem(`completed-${selectedDate}`)) {
-                    localStorage.setItem(`completed-${selectedDate}`, 'true');
-                    incrementStreak();
-                    playConfetti();
-                    updateCalendarEvents();
-                }
-            } else {
-                localStorage.removeItem(`completed-${selectedDate}`);
-            }
-        }
+<script>
+/* ---------- CONFIG ---------- */
+const API_KEY = 'AIzaSyBY7RyrrWyDihjC0FLWJeEqo8nLiMEa8zo';
+const CLIENT_ID = '1010185464516-utcu4mcaq0gsc7alh0drqikreq9lre74.apps.googleusercontent.com';
 
-        function saveChecklist() {
-            localStorage.setItem('checklist', JSON.stringify(checklistData));
-            if (isSignedIn) {
-                syncWithGoogleCalendar();
-            }
-        }
+/* ---------- GLOBALS ---------- */
+let checklistData = [];
+let calendar;
+let isSignedIn = false;
+let selectedDate = new Date().toISOString().split('T')[0];
 
-        function updateProgress() {
-            const completed = checklistData.filter(task => task.completed).length;
-            const total = checklistData.length;
-            const percentage = Math.round((completed / total) * 100);
-            
-            document.getElementById('progress-fill').style.width = `${percentage}%`;
-            document.getElementById('progress-text').textContent = `${percentage}% completed`;
-        }
+/* ---------- INIT ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  loadChecklist();
+  updateDate();
+  initializeCalendar();
+  loadReflection(selectedDate);
+  loadStreak();
+  pomodoroRender();
+});
 
-        // Streak functionality
-        function loadStreak() {
-            const streak = parseInt(localStorage.getItem('streak') || '0');
-            document.getElementById('streak-number').textContent = streak;
-        }
+/* ---------- CHECKLIST ---------- */
+const defaultTasks = [
+  {text:"Physics - Mechanics Practice",subject:"physics",completed:false},
+  {text:"Chemistry - Organic Reactions",subject:"chemistry",completed:false},
+  {text:"Biology - Human Physiology",subject:"biology",completed:false},
+  {text:"Gym - 30 min workout",subject:"gym",completed:false},
+  {text:"Revision - Flashcards review",subject:"revision",completed:false}
+];
 
-        function incrementStreak() {
-            const current = parseInt(localStorage.getItem('streak') || '0');
-            const newStreak = current + 1;
-            localStorage.setItem('streak', newStreak.toString());
-            document.getElementById('streak-number').textContent = newStreak;
-            
-            const counter = document.getElementById('streak-counter');
-            counter.classList.add('streak-glow');
-            setTimeout(() => counter.classList.remove('streak-glow'), 1000);
-        }
+function loadChecklist() {
+  checklistData = JSON.parse(localStorage.getItem('checklist') || JSON.stringify(defaultTasks));
+  renderChecklist();
+  updateProgress();
+}
+function renderChecklist() {
+  const c = document.getElementById('checklist');
+  c.innerHTML = '';
+  checklistData.forEach((t,i)=>{
+    const div=document.createElement('div');
+    div.className=`checklist-item ${t.completed?'completed':''}`;
+    div.innerHTML=`
+      <div class="checkbox ${t.completed?'checked':''}" onclick="toggleTask(${i})"></div>
+      <span class="subject-tag subject-${t.subject}">${t.subject}</span>
+      <span class="task-text ${t.completed?'completed':''}">${t.text}</span>`;
+    c.appendChild(div);
+  });
+}
+function toggleTask(i) {
+  checklistData[i].completed=!checklistData[i].completed;
+  localStorage.setItem('checklist',JSON.stringify(checklistData));
+  renderChecklist();updateProgress();
+  const allDone=checklistData.every(t=>t.completed);
+  if(allDone && !localStorage.getItem(`completed-${selectedDate}`)){
+    localStorage.setItem(`completed-${selectedDate}`,'true');
+    incrementStreak();playConfetti();
+  }
+}
+function updateProgress() {
+  const done=checklistData.filter(t=>t.completed).length;
+  const pct=Math.round(done/checklistData.length*100);
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('progress-text').textContent=pct+'% completed';
+}
+function loadStreak() {
+  document.getElementById('streak-number').textContent=localStorage.getItem('streak')||0;
+}
+function incrementStreak() {
+  const s=parseInt(localStorage.getItem('streak')||0)+1;
+  localStorage.setItem('streak',s);
+  document.getElementById('streak-number').textContent=s;
+}
 
-        // Calendar functionality
-        function initializeCalendar() {
-            const calendarEl = document.getElementById('calendar');
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                headerToolbar: {
-                    left: 'prev,next',
-                    center: 'title',
-                    right: 'today'
-                },
-                dateClick: function(info) {
-                    selectedDate = info.dateStr;
-                    loadReflection(selectedDate);
-                    updateCalendarHighlight();
-                },
-                dayCellDidMount: function(info) {
-                    const date = info.date.toISOString().split('T')[0];
-                    if (localStorage.getItem(`completed-${date}`)) {
-                        info.el.style.backgroundColor = '#d4edda';
-                    } else if (new Date(date) < new Date(selectedDate) && !localStorage.getItem(`completed-${date}`)) {
-                        info.el.style.backgroundColor = '#f8d7da';
-                    }
-                },
-                height: 'auto',
-                contentHeight: 'auto'
-            });
-            calendar.render();
-            updateCalendarHighlight();
-        }
+/* ---------- CALENDAR ---------- */
+function initializeCalendar() {
+  const el=document.getElementById('calendar');
+  calendar=new FullCalendar.Calendar(el,{initialView:'dayGridMonth',height:350,
+    headerToolbar:{left:'prev,next',center:'title',right:'today'},
+    dateClick(info)=>{selectedDate=info.dateStr;loadReflection(selectedDate);}
+  });calendar.render();
+}
+function updateDate() {
+  document.getElementById('today-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
 
-        function updateCalendarHighlight() {
-            calendar.getEvents().forEach(event => event.remove());
-            calendar.addEvent({
-                start: selectedDate,
-                display: 'background',
-                backgroundColor: '#34a853'
-            });
-        }
+/* ---------- REFLECTION ---------- */
+function saveReflection() {
+  const r={
+    todayPlan:document.getElementById('today-plan').value,
+    todayDone:document.getElementById('today-done').value,
+    achievements:document.getElementById('achievements').value,
+    regrets:document.getElementById('regrets').value,
+    mistakes:document.getElementById('mistakes').value,
+    timestamp:new Date().toISOString()
+  };
+  localStorage.setItem(`reflection-${selectedDate}`,JSON.stringify(r));
+  document.getElementById('last-saved').textContent='Last saved: '+new Date().toLocaleTimeString();
+  if(isSignedIn) syncWithGoogleCalendar();
+}
+function loadReflection(date) {
+  const r=JSON.parse(localStorage.getItem(`reflection-${date}`)||'{}');
+  ['today-plan','today-done','achievements','regrets','mistakes'].forEach(id=>{
+    document.getElementById(id).value=r[id]||'';
+  });
+  document.getElementById('last-saved').textContent=r.timestamp?'Last saved: '+new Date(r.timestamp).toLocaleTimeString():'Not saved yet';
+}
 
-        function updateCalendarEvents() {
-            calendar.refetchEvents();
-        }
+/* ---------- GOOGLE CALENDAR SYNC ---------- */
+function handleCredentialResponse(response) {
+  gapi.load('client',()=>{
+    gapi.client.init({apiKey,discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']})
+      .then(()=>gapi.client.setToken({access_token:response.credential}))
+      .then(()=>{isSignedIn=true;syncWithGoogleCalendar();});
+  });
+}
+async function syncWithGoogleCalendar() {
+  if(!isSignedIn) return;
+  try{
+    const list=await gapi.client.calendar.calendarList.list();
+    let cal=list.result.items.find(c=>c.summary==='NEET Tracker');
+    if(!cal){
+      const res=await gapi.client.calendar.calendars.insert({summary:'NEET Tracker',description:'NEET 2026 Study Dashboard'});
+      cal=res.result;
+    }
+    const checklist=checklistData;
+    const reflection=JSON.parse(localStorage.getItem(`reflection-${selectedDate}`)||'{}');
+    const done=checklist.every(t=>t.completed);
+    const event={
+      summary:`NEET Study Day - ${done?'✅Completed':'In Progress'}`,
+      description:`Checklist:\n${checklist.map(t=>`- [${t.completed?'x':' '}] ${t.text}`).join('\n')}\n\nReflection:\nPlan: ${reflection.todayPlan||'N/A'}\nDone: ${reflection.todayDone||'N/A'}\nAchievements: ${reflection.achievements||'N/A'}\nRegrets: ${reflection.regrets||'N/A'}\nMistakes: ${reflection.mistakes||'N/A'}`,
+      start:{date:selectedDate},end:{date:selectedDate}
+    };
+    const events=await gapi.client.calendar.events.list({calendarId:cal.id,timeMin:selectedDate+'T00:00:00Z',timeMax:selectedDate+'T23:59:59Z'});
+    const existing=events.result.items.find(e=>e.summary.includes('NEET Study Day'));
+    if(existing){
+      await gapi.client.calendar.events.update({calendarId:cal.id,eventId:existing.id,resource:event});
+    }else{
+      await gapi.client.calendar.events.insert({calendarId:cal.id,resource:event});
+    }
+  }catch(e){console.error(e)}
+}
 
-        // Reflection functionality
-        function saveReflection() {
-            const reflection = {
-                todayPlan: document.getElementById('today-plan').value,
-                todayDone: document.getElementById('today-done').value,
-                achievements: document.getElementById('achievements').value,
-                regrets: document.getElementById('regrets').value,
-                mistakes: document.getElementById('mistakes').value,
-                timestamp: new Date().toISOString()
-            };
-            
-            localStorage.setItem(`reflection-${selectedDate}`, JSON.stringify(reflection));
-            document.getElementById('last-saved').textContent = `Last saved: ${new Date().toLocaleTimeString()}`;
-            
-            // Ripple effect
-            const button = event.target;
-            button.classList.add('ripple');
-            setTimeout(() => button.classList.remove('ripple'), 600);
-            
-            if (isSignedIn) {
-                syncWithGoogleCalendar();
-            }
-        }
+/* ---------- POMODORO ---------- */
+let pomodoroSec = 25 * 60;
+let pomodoroInterval = null;
+let pomodoroIsBreak = false;
 
-        function loadReflection(date) {
-            const saved = localStorage.getItem(`reflection-${date}`);
-            const reflection = saved ? JSON.parse(saved) : {
-                todayPlan: '',
-                todayDone: '',
-                achievements: '',
-                regrets: '',
-                mistakes: '',
-                timestamp: null
-            };
-            
-            document.getElementById('today-plan').value = reflection.todayPlan || '';
-            document.getElementById('today-done').value = reflection.todayDone || '';
-            document.getElementById('achievements').value = reflection.achievements || '';
-            document.getElementById('regrets').value = reflection.regrets || '';
-            document.getElementById('mistakes').value = reflection.mistakes || '';
-            
-            const timestamp = reflection.timestamp ? new Date(reflection.timestamp).toLocaleTimeString() : 'Not saved yet';
-            document.getElementById('last-saved').textContent = `Last saved: ${timestamp}`;
-            
-            updateCalendarHighlight();
-        }
+function pomodoroRender() {
+  const min = Math.floor(pomodoroSec / 60);
+  const sec = (pomodoroSec % 60).toString().padStart(2, '0');
+  document.getElementById('timer').textContent = `${min}:${sec}`;
+  document.getElementById('mode').textContent = pomodoroIsBreak ? 'Break' : 'Work';
+}
+function pomodoroStart() {
+  if (pomodoroInterval) return;
+  pomodoroInterval = setInterval(() => {
+    pomodoroSec--;
+    pomodoroRender();
+    if (pomodoroSec <= 0) pomodoroNext();
+  }, 1000);
+}
+function pomodoroPause() { clearInterval(pomodoroInterval); pomodoroInterval = null; }
+function pomodoroReset() {
+  pomodoroPause();
+  pomodoroIsBreak = false;
+  pomodoroSec = 25 * 60;
+  pomodoroRender();
+}
+function pomodoroNext() {
+  pomodoroIsBreak = !pomodoroIsBreak;
+  pomodoroSec = pomodoroIsBreak ? 5 * 60 : 25 * 60;
+  pomodoroRender();
+  // simple beep
+  new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU').play();
+}
 
-        // Auto-expand textareas
-        function setupAutoExpand() {
-            const textareas = document.querySelectorAll('.auto-expand');
-            textareas.forEach(textarea => {
-                textarea.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = this.scrollHeight + 'px';
-                });
-                
-                // Initial height adjustment
-                textarea.style.height = 'auto';
-                textarea.style.height = textarea.scrollHeight + 'px';
-            });
-        }
-
-        // Google Calendar integration
-        let tokenClient;
-        let gapiInited = false;
-        let gisInited = false;
-
-        function gapiLoaded() {
-            gapi.load('client', initializeGapiClient);
-        }
-
-        async function initializeGapiClient() {
-            await gapi.client.init({
-                apiKey: API_KEY,
-                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
-            });
-            gapiInited = true;
-            maybeEnableButtons();
-        }
-
-        function gisLoaded() {
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/calendar',
-                callback: '',
-            });
-            gisInited = true;
-            maybeEnableButtons();
-        }
-
-        function maybeEnableButtons() {
-            if (gapiInited && gisInited) {
-                document.getElementById('google-signin-button').style.display = 'block';
-            }
-        }
-
-        function handleAuthClick() {
-            tokenClient.callback = async (resp) => {
-                if (resp.error !== undefined) {
-                    throw resp;
-                }
-                isSignedIn = true;
-                document.getElementById('google-signin-button').style.display = 'none';
-                document.getElementById('google-signout-button').style.display = 'block';
-                await syncWithGoogleCalendar();
-            };
-
-            if (gapi.client.getToken() === null) {
-                tokenClient.requestAccessToken({prompt: 'consent'});
-            } else {
-                tokenClient.requestAccessToken({prompt: ''});
-            }
-        }
-
-        function handleSignoutClick() {
-            const token = gapi.client.getToken();
-            if (token !== null) {
-                google.accounts.oauth2.revoke(token.access_token);
-                gapi.client.setToken('');
-                isSignedIn = false;
-                document.getElementById('google-signin-button').style.display = 'block';
-                document.getElementById('google-signout-button').style.display = 'none';
-            }
-        }
-
-        async function syncWithGoogleCalendar() {
-            if (!isSignedIn) return;
-
-            try {
-                // Create or get calendar
-                const calendarList = await gapi.client.calendar.calendarList.list();
-                let neetCalendar = calendarList.result.items.find(cal => cal.summary === 'NEET Tracker');
-                
-                if (!neetCalendar) {
-                    const newCalendar = await gapi.client.calendar.calendars.insert({
-                        summary: 'NEET Tracker',
-                        description: 'NEET 2026 Study Dashboard'
-                    });
-                    neetCalendar = newCalendar.result;
-                }
-
-                // Prepare event data
-                const reflection = JSON.parse(localStorage.getItem(`reflection-${selectedDate}`) || '{}');
-                const checklist = checklistData;
-                const completed = checklist.every(task => task.completed);
-
-                const event = {
-                    summary: `NEET Study Day - ${completed ? 'Completed ✅' : 'In Progress'}`,
-                    description: `
-                        **Checklist:**
-                        ${checklist.map(task => `- [${task.completed ? 'x' : ' '}] ${task.text}`).join('\n')}
-                        
-                        **Reflection:**
-                        - Today's Plan: ${reflection.todayPlan || 'N/A'}
-                        - What I Did: ${reflection.todayDone || 'N/A'}
-                        - Achievements: ${reflection.achievements || 'N/A'}
-                        - Regrets: ${reflection.regrets || 'N/A'}
-                        - Mistakes to Avoid: ${reflection.mistakes || 'N/A'}
-                    `,
-                    start: {
-                        date: selectedDate
-                    },
-                    end: {
-                        date: selectedDate
-                    }
-                };
-
-                // Update or create event
-                const events = await gapi.client.calendar.events.list({
-                    calendarId: neetCalendar.id,
-                    timeMin: selectedDate + 'T00:00:00Z',
-                    timeMax: selectedDate + 'T23:59:59Z'
-                });
-
-                const existingEvent = events.result.items.find(e => e.summary.includes('NEET Study Day'));
-                
-                if (existingEvent) {
-                    await gapi.client.calendar.events.update({
-                        calendarId: neetCalendar.id,
-                        eventId: existingEvent.id,
-                        resource: event
-                    });
-                } else {
-                    await gapi.client.calendar.events.insert({
-                        calendarId: neetCalendar.id,
-                        resource: event
-                    });
-                }
-            } catch (error) {
-                console.error('Error syncing with Google Calendar:', error);
-            }
-        }
-
-        // Utility functions
-        function updateDate() {
-            const today = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('today-date').textContent = today.toLocaleDateString('en-US', options);
-        }
-
-        function playConfetti() {
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c']
-            });
-        }
-
-        function togglePanel(side) {
-            const content = document.getElementById(`${side}-panel-content`);
-            const button = event.target;
-            const isCollapsed = content.classList.contains('collapsed');
-            
-            if (isCollapsed) {
-                content.classList.remove('collapsed');
-                button.classList.remove('rotated');
-                button.textContent = '▼';
-            } else {
-                content.classList.add('collapsed');
-                button.classList.add('rotated');
-                button.textContent = '▲';
-            }
-        }
-
-        // Load Google API
-        gapiLoaded();
-        gisLoaded();
-    </script>
+/* ---------- UTIL ---------- */
+function playConfetti() {
+  confetti({particleCount:100,spread:70,origin:{y:.6},colors:['#667eea','#764ba2','#f093fb','#f5576c']});
+}
+</script>
 </body>
 </html>
