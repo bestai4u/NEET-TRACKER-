@@ -9,10 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- FullCalendar -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-  <!-- Google Identity Services -->
+  <!-- Google Identity Services & Calendar API -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <!-- Google API (for Calendar) -->
-  <script src="https://apis.google.com/js/api.js" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
   <!-- Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/index.min.js"></script>
 
@@ -24,34 +23,33 @@
     --gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
   }
   *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
-  body{background:var(--bg);color:var(--text)}
+  body{background:var(--bg);color:var(--text);line-height:1.6}
   .container{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px;max-width:1400px;margin:0 auto}
-  .panel{background:var(--card);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:24px}
-  @media(max-width:768px){.container{grid-template-columns:1fr;padding:12px}}
+  @media(max-width:768px){.container{grid-template-columns:1fr;padding:8px;gap:12px}}
+  .panel{background:var(--card);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:20px}
   .panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px}
-  .panel-title{font-size:24px;font-weight:600}
+  .panel-title{font-size:22px;font-weight:600}
   .date-display{font-size:18px;color:var(--text-secondary);margin-bottom:12px}
-  .streak-counter{display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:var(--gradient);color:#fff;font-weight:600}
+  .streak-counter{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;background:var(--gradient);color:#fff;font-weight:600}
   .streak-icon{font-size:28px;animation:pulse 2s infinite}
   @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
   .checklist-item{display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:8px;border-radius:12px;background:#fafafa;cursor:pointer}
   .checklist-item.completed{background:#e8f5e8}
   .subject-tag{padding:4px 12px;border-radius:20px;font-size:12px;color:#fff;min-width:80px;text-align:center}
-  .checkbox{width:28px;height:28px;border:2px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .checkbox.checked{background:var(--gradient);border-color:transparent}
-  .checkbox.checked:after{content:'✓';color:#fff;font-weight:700}
+  .checkbox{width:26px;height:26px;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .checkbox.checked{background:var(--gradient);border-color:transparent;color:#fff;font-weight:700}
   .task-text{flex:1;font-size:15px}
   .task-text.completed{text-decoration:line-through;color:var(--text-secondary)}
-  .progress-container{margin-top:24px}
-  .progress-bar{height:12px;background:#e0e0e0;border-radius:6px;overflow:hidden}
-  .progress-fill{height:100%;background:var(--gradient);transition:width .5s}
-  .progress-text{text-align:center;margin-top:8px;font-weight:600;color:var(--text-secondary)}
+  .progress-container{margin-top:20px}
+  .progress-bar{height:10px;background:#e0e0e0;border-radius:5px;overflow:hidden}
+  .progress-fill{height:100%;background:var(--gradient);transition:width .4s}
+  .progress-text{text-align:center;margin-top:6px;font-size:14px;font-weight:600;color:var(--text-secondary)}
 
   /* Pomodoro */
   .pomodoro{margin-top:24px;text-align:center}
   .pomodoro-display{font-size:32px;font-weight:700;font-family:monospace;margin-bottom:8px}
   .pomodoro-controls{display:flex;gap:8px;justify-content:center}
-  .pomodoro-btn{padding:8px 16px;border:none;border-radius:8px;background:var(--gradient);color:#fff;cursor:pointer;font-size:14px}
+  .pomodoro-btn{padding:8px 16px;border:none;border-radius:8px;background:var(--gradient);color:#fff;font-size:14px;cursor:pointer}
   .pomodoro-btn:active{transform:scale(.95)}
   .pomodoro-mode{font-size:14px;color:var(--text-secondary)}
 
@@ -96,7 +94,7 @@
   <div class="panel">
     <div class="panel-header"><h2 class="panel-title">Calendar & Reflection</h2></div>
 
-    <!-- Google One-Tap Sign-In -->
+    <!-- Google Identity Services -->
     <div class="google-signin">
       <div id="g_id_onload"
            data-client_id="1010185464516-utcu4mcaq0gsc7alh0drqikreq9lre74.apps.googleusercontent.com"
@@ -134,7 +132,7 @@
 
 <script>
 /* ---------- CONFIG ---------- */
-const API_KEY = 'AIzaSyBY7RyrrWyDihjC0FLWJeEqo8nLiMEa8zo';
+const API_KEY   = 'AIzaSyBY7RyrrWyDihjC0FLWJeEqo8nLiMEa8zo';
 const CLIENT_ID = '1010185464516-utcu4mcaq0gsc7alh0drqikreq9lre74.apps.googleusercontent.com';
 
 /* ---------- GLOBALS ---------- */
@@ -204,17 +202,22 @@ function incrementStreak() {
   localStorage.setItem('streak',s);
   document.getElementById('streak-number').textContent=s;
 }
+function updateDate() {
+  document.getElementById('today-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
 
 /* ---------- CALENDAR ---------- */
 function initializeCalendar() {
   const el=document.getElementById('calendar');
-  calendar=new FullCalendar.Calendar(el,{initialView:'dayGridMonth',height:350,
+  calendar=new FullCalendar.Calendar(el,{
+    initialView:'dayGridMonth',
+    height:350,
     headerToolbar:{left:'prev,next',center:'title',right:'today'},
-    dateClick(info)=>{selectedDate=info.dateStr;loadReflection(selectedDate);}
+    dateClick(info){
+      selectedDate=info.dateStr;
+      loadReflection(selectedDate);
+    }
   });calendar.render();
-}
-function updateDate() {
-  document.getElementById('today-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 }
 
 /* ---------- REFLECTION ---------- */
@@ -241,10 +244,14 @@ function loadReflection(date) {
 
 /* ---------- GOOGLE CALENDAR SYNC ---------- */
 function handleCredentialResponse(response) {
+  // response.credential is a JWT (access token)
   gapi.load('client',()=>{
     gapi.client.init({apiKey,discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']})
-      .then(()=>gapi.client.setToken({access_token:response.credential}))
-      .then(()=>{isSignedIn=true;syncWithGoogleCalendar();});
+      .then(()=>{
+        gapi.client.setToken({access_token:response.credential});
+        isSignedIn=true;
+        syncWithGoogleCalendar();
+      });
   });
 }
 async function syncWithGoogleCalendar() {
@@ -304,7 +311,7 @@ function pomodoroNext() {
   pomodoroIsBreak = !pomodoroIsBreak;
   pomodoroSec = pomodoroIsBreak ? 5 * 60 : 25 * 60;
   pomodoroRender();
-  // simple beep
+  // beep
   new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU').play();
 }
 
